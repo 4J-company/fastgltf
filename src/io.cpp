@@ -100,7 +100,7 @@ void fg::GltfDataBuffer::read(void *ptr, std::size_t count) {
 	idx += count;
 }
 
-fg::span<std::byte> fg::GltfDataBuffer::read(std::size_t count, std::size_t padding) {
+fg::span<std::byte> fg::GltfDataBuffer::read(std::size_t count, [[maybe_unused]] std::size_t padding) {
 	span<std::byte> sub(buffer.get() + idx, count);
 	idx += count;
 	return sub;
@@ -128,7 +128,7 @@ bool fg::GltfFileStream::isOpen() const {
 
 void fg::GltfFileStream::read(void *ptr, std::size_t count) {
 	fileStream.read(
-			reinterpret_cast<char*>(ptr),
+			static_cast<char*>(ptr),
 			static_cast<std::streamsize>(count));
 }
 
@@ -294,7 +294,7 @@ void fg::MappedGltfFile::read(void *ptr, std::size_t count) {
 	idx += count;
 }
 
-fg::span<std::byte> fg::MappedGltfFile::read(std::size_t count, std::size_t padding) {
+fg::span<std::byte> fg::MappedGltfFile::read(std::size_t count, [[maybe_unused]] std::size_t padding) {
 	span<std::byte> sub(static_cast<std::byte*>(mappedFile) + idx, count);
 	idx += count;
 	return sub;
@@ -450,7 +450,7 @@ fg::Expected<fg::DataSource> fg::Parser::loadFileFromUri(URIView& uri) const noe
 		auto info = config.mapCallback(static_cast<std::uint64_t>(length), config.userPointer);
 		if (info.mappedMemory != nullptr) {
 			const sources::CustomBuffer customBufferSource = { info.customId };
-			file.read(reinterpret_cast<char*>(info.mappedMemory), length);
+			file.read(static_cast<char*>(info.mappedMemory), length);
 			if (config.unmapCallback != nullptr) {
 				config.unmapCallback(&info, config.userPointer);
 			}

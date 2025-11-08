@@ -168,8 +168,8 @@ TEST_CASE("Loading some basic glTF", "[gltf-loader]") {
         REQUIRE(material.name == "Cube");
         REQUIRE(material.pbrData.baseColorTexture.has_value());
         REQUIRE(material.pbrData.baseColorTexture->textureIndex == 0);
-        REQUIRE(material.pbrData.metallicRoughnessTexture.has_value());
-        REQUIRE(material.pbrData.metallicRoughnessTexture->textureIndex == 1);
+		REQUIRE(material.pbrData.metallicFactor == 0.);
+		REQUIRE(material.pbrData.roughnessFactor == fastgltf::num(0.079));
         REQUIRE(!material.normalTexture.has_value());
         REQUIRE(!material.emissiveTexture.has_value());
         REQUIRE(!material.occlusionTexture.has_value());
@@ -352,7 +352,8 @@ TEST_CASE("Test base64 decoding callbacks", "[gltf-loader]") {
 	REQUIRE(jsonData.isOpen());
 
     size_t decodeCounter = 0;
-    auto decodeCallback = [](std::string_view encodedData, uint8_t* outputData, size_t padding, size_t outputSize, void* userPointer) {
+    auto decodeCallback = [](const std::string_view encodedData, uint8_t* outputData,
+        const size_t padding, [[maybe_unused]] size_t outputSize, void* userPointer) {
         (*static_cast<size_t*>(userPointer))++;
         fastgltf::base64::decode_inplace(encodedData, outputData, padding);
     };

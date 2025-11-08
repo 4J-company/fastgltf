@@ -493,7 +493,7 @@ TEST_CASE("Extension GODOT_single_root", "[gltf-loader]") {
 		REQUIRE(asset->extensionsUsed.size() == 1);
 		REQUIRE(asset->extensionsUsed[0] == "GODOT_single_root");
 		REQUIRE(asset->scenes.size() == 1);
-		REQUIRE(asset->defaultScene == 0);
+		REQUIRE(asset->defaultScene == 0U);
 		REQUIRE(asset->scenes[0].nodeIndices.size() == 1);
 		REQUIRE(asset->scenes[0].nodeIndices[0] == 0);
 		REQUIRE(std::holds_alternative<fastgltf::TRS>(asset->nodes[0].transform));
@@ -543,6 +543,32 @@ TEST_CASE("Extension GODOT_single_root", "[gltf-loader]") {
 		asset->nodes[0].transform = fastgltf::TRS{};
 		REQUIRE(fastgltf::validate(asset.get()) == fastgltf::Error::None);
 	}
+}
+
+TEST_CASE("KHR_materials_diffuse_transmission", "[gltf-loader]") {
+	auto diffuseTransmissionTest = sampleAssets / "Models" / "DiffuseTransmissionTest" / "glTF" / "DiffuseTransmissionTest.gltf";
+	fastgltf::GltfFileStream jsonData(diffuseTransmissionTest);
+	REQUIRE(jsonData.isOpen());
+
+	fastgltf::Parser parser(fastgltf::Extensions::KHR_materials_diffuse_transmission | fastgltf::Extensions::KHR_materials_unlit | fastgltf::Extensions::KHR_lights_punctual);
+	auto asset = parser.loadGltfJson(jsonData, diffuseTransmissionTest);
+	REQUIRE(asset.error() == fastgltf::Error::None);
+	REQUIRE(fastgltf::validate(asset.get()) == fastgltf::Error::None);
+	REQUIRE(asset->materials.size() == 29);
+
+	REQUIRE(asset->materials[0].diffuseTransmission);
+	REQUIRE(asset->materials[0].diffuseTransmission->diffuseTransmissionFactor == 0.0f);
+	REQUIRE(asset->materials[0].diffuseTransmission->diffuseTransmissionTexture == std::nullopt);
+	REQUIRE(asset->materials[0].diffuseTransmission->diffuseTransmissionColorFactor == fastgltf::math::nvec3(1.0f));
+	REQUIRE(asset->materials[0].diffuseTransmission->diffuseTransmissionColorTexture == std::nullopt);
+
+	REQUIRE(asset->materials[1].diffuseTransmission);
+	REQUIRE(asset->materials[1].diffuseTransmission->diffuseTransmissionFactor == 0.25f);
+	REQUIRE(asset->materials[1].diffuseTransmission->diffuseTransmissionTexture == std::nullopt);
+	REQUIRE(asset->materials[1].diffuseTransmission->diffuseTransmissionColorFactor == fastgltf::math::nvec3(1.0f));
+	REQUIRE(asset->materials[1].diffuseTransmission->diffuseTransmissionColorTexture == std::nullopt);
+
+	REQUIRE(!asset->materials[20].diffuseTransmission);
 }
 
 #if FASTGLTF_ENABLE_KHR_IMPLICIT_SHAPES
@@ -796,3 +822,48 @@ TEST_CASE("Extension KHR_physics_rigid_bodies complex", "[gltf-loader]") {
 	REQUIRE(joint.enableCollision == false);
 }
 #endif
+
+TEST_CASE("Extension KHR_node_visibility", "[gltf-loader]") {
+	fastgltf::Parser parser(fastgltf::Extensions::KHR_node_visibility);
+	auto khrNodeVisibilityValid = path / "khr_node_visibility_valid.gltf";
+	fastgltf::GltfFileStream jsonData(khrNodeVisibilityValid);
+	REQUIRE(jsonData.isOpen());
+	auto asset = parser.loadGltfJson(jsonData, khrNodeVisibilityValid);
+	REQUIRE(asset.error() == fastgltf::Error::None);
+	REQUIRE(fastgltf::validate(asset.get()) == fastgltf::Error::None);
+
+	REQUIRE(asset->nodes.size() == 3);
+	REQUIRE(asset->nodes[0].visible); // If KHR_node_visibility extension is not present, nodes are visible by default.
+	REQUIRE(asset->nodes[1].visible);
+	REQUIRE(!asset->nodes[2].visible);
+}
+
+TEST_CASE("Extension KHR_node_selectability", "[gltf-loader]") {
+	fastgltf::Parser parser(fastgltf::Extensions::KHR_node_selectability);
+	auto khrNodeSelectabilityValid = path / "khr_node_selectability_valid.gltf";
+	fastgltf::GltfFileStream jsonData(khrNodeSelectabilityValid);
+	REQUIRE(jsonData.isOpen());
+	auto asset = parser.loadGltfJson(jsonData, khrNodeSelectabilityValid);
+	REQUIRE(asset.error() == fastgltf::Error::None);
+	REQUIRE(fastgltf::validate(asset.get()) == fastgltf::Error::None);
+
+	REQUIRE(asset->nodes.size() == 3);
+	REQUIRE(asset->nodes[0].selectable); // If KHR_node_selectability extension is not present, nodes are selectable by default.
+	REQUIRE(asset->nodes[1].selectable);
+	REQUIRE(!asset->nodes[2].selectable);
+}
+
+TEST_CASE("Extension KHR_node_hoverability", "[gltf-loader]") {
+	fastgltf::Parser parser(fastgltf::Extensions::KHR_node_hoverability);
+	auto khrNodeHoverabilityValid = path / "khr_node_hoverability_valid.gltf";
+	fastgltf::GltfFileStream jsonData(khrNodeHoverabilityValid);
+	REQUIRE(jsonData.isOpen());
+	auto asset = parser.loadGltfJson(jsonData, khrNodeHoverabilityValid);
+	REQUIRE(asset.error() == fastgltf::Error::None);
+	REQUIRE(fastgltf::validate(asset.get()) == fastgltf::Error::None);
+
+	REQUIRE(asset->nodes.size() == 3);
+	REQUIRE(asset->nodes[0].hoverable); // If KHR_node_hoverability extension is not present, nodes are hoverable by default.
+	REQUIRE(asset->nodes[1].hoverable);
+	REQUIRE(!asset->nodes[2].hoverable);
+}
